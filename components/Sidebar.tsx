@@ -45,7 +45,6 @@ const MENU = [
     baslik: "DİĞER PANELLER",
     items: [
       { href: "http://localhost:3000", label: "Kira Yönetim",  icon: LayoutDashboard, harici: true },
-      { href: "http://localhost:3003", label: "Muhasebe",      icon: DollarSign,      harici: true },
     ],
   },
 ];
