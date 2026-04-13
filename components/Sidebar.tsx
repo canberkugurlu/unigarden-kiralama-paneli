@@ -13,6 +13,7 @@ import {
   DollarSign,
   ChevronDown,
   Calendar,
+  Building2,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -21,6 +22,12 @@ const MENU = [
     baslik: null,
     items: [
       { href: "/", label: "Ana Panel", icon: LayoutDashboard },
+    ],
+  },
+  {
+    baslik: "VARLIK",
+    items: [
+      { href: "/konutlar",   label: "Daireler",              icon: Building2 },
     ],
   },
   {
