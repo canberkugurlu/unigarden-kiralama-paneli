@@ -16,6 +16,7 @@ import {
   Building2,
 } from "lucide-react";
 import { useState } from "react";
+import ThemeToggle from "./ThemeToggle";
 
 const MENU = [
   {
@@ -147,8 +148,11 @@ export default function Sidebar() {
       </nav>
 
       <div className="px-5 py-3 border-t border-gray-700/60 text-xs text-gray-500 shrink-0">
-        v1.0.0 &copy; {new Date().getFullYear()} Unigarden
-      </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px]">v1.0.0 &copy; {new Date().getFullYear()} Unigarden</span>
+            <ThemeToggle className="!text-gray-400 hover:!bg-gray-800" />
+          </div>
+        </div>
     </aside>
   );
 }

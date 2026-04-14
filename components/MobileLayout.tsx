@@ -8,6 +8,7 @@ import {
   CheckSquare, UserCog, DollarSign, Calendar, Building2,
   LogOut, Menu, X, ArrowLeft,
 } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
 
 const ALL_ITEMS = [
   { href: "/",           label: "Ana Panel",             icon: LayoutDashboard, color: "bg-violet-500", textColor: "text-violet-600" },
@@ -53,6 +54,7 @@ export default function MobileLayout({ children }: { children: React.ReactNode }
             <h1 className="font-semibold text-base truncate leading-tight">{baslik}</h1>
             {isRoot && <p className="text-[11px] text-violet-100 leading-tight">Kiralama Paneli</p>}
           </div>
+          <ThemeToggle className="!text-white hover:!bg-white/10" />
           <button onClick={cikisYap} className="p-2 rounded-full hover:bg-white/10" title="Çıkış"><LogOut size={20} /></button>
         </div>
       </header>
