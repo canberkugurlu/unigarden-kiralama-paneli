@@ -23,6 +23,7 @@ const MENU = [
     baslik: null,
     items: [
       { href: "/", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/gorevlerim", label: "Görevlerim", icon: CheckSquare },
     ],
   },
   {
