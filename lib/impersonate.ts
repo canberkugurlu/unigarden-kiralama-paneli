@@ -20,3 +20,4 @@ export async function verifyImpersonationToken(token: string): Promise<Impersona
     return null;
   }
 }
+
