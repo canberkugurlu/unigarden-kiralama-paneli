@@ -11,7 +11,7 @@ import {
 import ThemeToggle from "./ThemeToggle";
 
 const ALL_ITEMS = [
-  { href: "/",           label: "Ana Panel",             icon: LayoutDashboard, color: "bg-violet-500", textColor: "text-violet-600" },
+  { href: "/",           label: "Dashboard",             icon: LayoutDashboard, color: "bg-violet-500", textColor: "text-violet-600" },
   { href: "/konutlar",   label: "Daireler",              icon: Building2,       color: "bg-emerald-500", textColor: "text-emerald-600" },
   { href: "/leads",      label: "Potansiyel Müşteriler", icon: Users,           color: "bg-blue-500",    textColor: "text-blue-600" },
   { href: "/turlar",     label: "Daire Gezdirme",        icon: Home,            color: "bg-pink-500",    textColor: "text-pink-600" },

@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 
 const titles: Record<string, string> = {
-  "/":              "Ana Panel",
+  "/":              "Dashboard",
   "/leads":         "Potansiyel Müşteriler",
   "/leads/yeni":    "Yeni Müşteri",
   "/leads/[id]":    "Müşteri Kartı",

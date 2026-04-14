@@ -22,7 +22,7 @@ const MENU = [
   {
     baslik: null,
     items: [
-      { href: "/", label: "Ana Panel", icon: LayoutDashboard },
+      { href: "/", label: "Dashboard", icon: LayoutDashboard },
     ],
   },
   {
