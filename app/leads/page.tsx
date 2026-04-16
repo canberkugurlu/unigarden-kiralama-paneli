@@ -4,10 +4,16 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plus, Search, Users, Phone, Home, Mail, ChevronRight,
-  LayoutGrid, List, Pencil, Trash2, X, Check
+  Trash2, X, Building2,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
+
+interface OgrenciSozlesme {
+  id: string;
+  durum: string;
+  konut: { daireNo: string; blok: string; etap: number };
+}
 
 interface Lead {
   id: string;
@@ -23,9 +29,9 @@ interface Lead {
   atananAd: string | null;
   olusturmaTar: string;
   guncellemeTar: string;
+  ogrenciId: string | null;
+  ogrenci: { id: string; rol: string; sozlesmeler: OgrenciSozlesme[] } | null;
   _count: { turlar: number; gorusmeler: number; davetler: number };
-  turlar: { tarih: string; sonuc: string }[];
-  gorusmeler: { tarih: string }[];
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -48,18 +54,34 @@ const DURUM_LABEL: Record<string, string> = {
 };
 
 const DURUM_RENK: Record<string, string> = {
-  Yeni: "bg-blue-100 text-blue-700 border-blue-200",
-  Iletisimde: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  TurPlanlandı: "bg-indigo-100 text-indigo-700 border-indigo-200",
-  TurYapildi: "bg-purple-100 text-purple-700 border-purple-200",
-  TeklifVerildi: "bg-orange-100 text-orange-700 border-orange-200",
-  SozlesmeAsamasi: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  AktifKiraci: "bg-green-100 text-green-700 border-green-200",
-  Reddedildi: "bg-red-100 text-red-700 border-red-200",
-  Ilgisiz: "bg-gray-100 text-gray-600 border-gray-200",
+  Yeni: "bg-blue-100 text-blue-700",
+  Iletisimde: "bg-yellow-100 text-yellow-700",
+  TurPlanlandı: "bg-indigo-100 text-indigo-700",
+  TurYapildi: "bg-purple-100 text-purple-700",
+  TeklifVerildi: "bg-orange-100 text-orange-700",
+  SozlesmeAsamasi: "bg-emerald-100 text-emerald-700",
+  AktifKiraci: "bg-green-100 text-green-700",
+  Reddedildi: "bg-red-100 text-red-700",
+  Ilgisiz: "bg-gray-100 text-gray-600",
 };
 
-const KAYNAKLAR = ["Manuel", "Website", "Referans", "Instagram", "Telefon", "Fuar", "Diğer"];
+const KAYNAKLAR = ["Manuel", "Website", "Referans", "Instagram", "Telefon", "Fuar", "KiraciPortal", "Diğer"];
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function effectiveDurum(lead: Lead): string {
+  if (!lead.ogrenci) return lead.durum;
+  const { rol, sozlesmeler } = lead.ogrenci;
+  if (rol === "Aktif") return "AktifKiraci";
+  if (sozlesmeler.length > 0) return "SozlesmeAsamasi";
+  return lead.durum;
+}
+
+function atananDaire(lead: Lead): string | null {
+  if (!lead.ogrenci || lead.ogrenci.sozlesmeler.length === 0) return null;
+  const s = lead.ogrenci.sozlesmeler[0];
+  return `${s.konut.daireNo}`;
+}
 
 // ─── YeniLeadModal ────────────────────────────────────────────────────────────
 
@@ -165,53 +187,6 @@ function YeniLeadModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
   );
 }
 
-// ─── LeadKart (kanban card) ───────────────────────────────────────────────────
-
-function LeadKart({ lead, onKlikk, onSil }: { lead: Lead; onKlikk: () => void; onSil: () => void }) {
-  return (
-    <div
-      onClick={onKlikk}
-      className="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow group"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="font-semibold text-gray-800 text-sm truncate">{lead.ad} {lead.soyad}</p>
-          <p className="text-xs text-gray-500 mt-0.5">{lead.telefon}</p>
-        </div>
-        <button
-          onClick={e => { e.stopPropagation(); onSil(); }}
-          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all"
-        >
-          <Trash2 size={12} />
-        </button>
-      </div>
-
-      {lead.ilgiTip && (
-        <span className="mt-2 inline-block text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{lead.ilgiTip}</span>
-      )}
-
-      <div className="flex items-center gap-3 mt-3 text-xs text-gray-400">
-        {lead._count.turlar > 0 && (
-          <span className="flex items-center gap-1"><Home size={10} />{lead._count.turlar} tur</span>
-        )}
-        {lead._count.gorusmeler > 0 && (
-          <span className="flex items-center gap-1"><Phone size={10} />{lead._count.gorusmeler} görüşme</span>
-        )}
-      </div>
-
-      {lead.butce && (
-        <p className="mt-2 text-xs font-medium text-emerald-600">
-          ₺{lead.butce.toLocaleString("tr-TR")}
-        </p>
-      )}
-
-      {lead.atananAd && (
-        <p className="mt-1 text-xs text-gray-400 truncate">→ {lead.atananAd}</p>
-      )}
-    </div>
-  );
-}
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function LeadsPage() {
@@ -220,7 +195,6 @@ export default function LeadsPage() {
   const [yukleniyor, setYukleniyor] = useState(true);
   const [arama, setArama] = useState("");
   const [durumFiltre, setDurumFiltre] = useState("Tumu");
-  const [gorunum, setGorunum] = useState<"kanban" | "liste">("kanban");
   const [modal, setModal] = useState(false);
   const [silOnay, setSilOnay] = useState<string | null>(null);
 
@@ -243,11 +217,6 @@ export default function LeadsPage() {
     yukle();
   };
 
-  // Kanban columns
-  const kolonlar = gorunum === "kanban"
-    ? DURUMLAR.map(d => ({ durum: d, leadler: leadler.filter(l => l.durum === d) }))
-    : [];
-
   return (
     <div className="space-y-4">
       {/* Üst Bar */}
@@ -269,16 +238,6 @@ export default function LeadsPage() {
           <option value="Tumu">Tüm Durumlar</option>
           {DURUMLAR.map(d => <option key={d} value={d}>{DURUM_LABEL[d]}</option>)}
         </select>
-        <div className="flex border border-gray-200 rounded-lg overflow-hidden">
-          <button onClick={() => setGorunum("kanban")}
-            className={`px-3 py-2 text-sm flex items-center gap-1.5 ${gorunum === "kanban" ? "bg-violet-50 text-violet-700" : "text-gray-500 hover:bg-gray-50"}`}>
-            <LayoutGrid size={14} /> Kanban
-          </button>
-          <button onClick={() => setGorunum("liste")}
-            className={`px-3 py-2 text-sm flex items-center gap-1.5 border-l border-gray-200 ${gorunum === "liste" ? "bg-violet-50 text-violet-700" : "text-gray-500 hover:bg-gray-50"}`}>
-            <List size={14} /> Liste
-          </button>
-        </div>
         <button
           onClick={() => setModal(true)}
           className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg text-sm font-medium hover:bg-violet-700"
@@ -289,35 +248,7 @@ export default function LeadsPage() {
 
       {yukleniyor ? (
         <div className="text-center py-20 text-gray-400 text-sm">Yükleniyor…</div>
-      ) : gorunum === "kanban" ? (
-        /* Kanban */
-        <div className="flex gap-4 overflow-x-auto pb-4">
-          {kolonlar.map(({ durum, leadler: kLeadler }) => (
-            <div key={durum} className="flex-shrink-0 w-64">
-              <div className={`flex items-center justify-between px-3 py-2 rounded-lg mb-2 border ${DURUM_RENK[durum]}`}>
-                <span className="text-xs font-semibold">{DURUM_LABEL[durum]}</span>
-                <span className="text-xs font-bold">{kLeadler.length}</span>
-              </div>
-              <div className="space-y-2">
-                {kLeadler.map(l => (
-                  <LeadKart
-                    key={l.id}
-                    lead={l}
-                    onKlikk={() => router.push(`/leads/${l.id}`)}
-                    onSil={() => setSilOnay(l.id)}
-                  />
-                ))}
-                {kLeadler.length === 0 && (
-                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center text-xs text-gray-400">
-                    Boş
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
       ) : (
-        /* Liste */
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           {leadler.length === 0 ? (
             <div className="text-center py-16 text-gray-400">
@@ -335,55 +266,75 @@ export default function LeadsPage() {
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">İlgi Tipi</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Bütçe</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Atanan</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Daire</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Aktivite</th>
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody>
-                {leadler.map((l) => (
-                  <tr key={l.id} onClick={() => router.push(`/leads/${l.id}`)}
-                    className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer">
-                    <td className="px-4 py-3 font-medium text-gray-800">{l.ad} {l.soyad}</td>
-                    <td className="px-4 py-3 text-gray-600">{l.telefon}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${DURUM_RENK[l.durum] ?? "bg-gray-100 text-gray-600"}`}>
-                        {DURUM_LABEL[l.durum] ?? l.durum}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">{l.kaynak}</td>
-                    <td className="px-4 py-3 text-gray-500">{l.ilgiTip ?? "—"}</td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {l.butce ? `₺${l.butce.toLocaleString("tr-TR")}` : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">{l.atananAd ?? "—"}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3 text-xs text-gray-400">
-                        <span className="flex items-center gap-1"><Home size={10} />{l._count.turlar}</span>
-                        <span className="flex items-center gap-1"><Phone size={10} />{l._count.gorusmeler}</span>
-                        <span className="flex items-center gap-1"><Mail size={10} />{l._count.davetler}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => router.push(`/leads/${l.id}`)}
-                          className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600">
-                          <ChevronRight size={14} />
-                        </button>
-                        <button onClick={() => setSilOnay(l.id)}
-                          className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {leadler.map((l) => {
+                  const durum = effectiveDurum(l);
+                  const daire = atananDaire(l);
+                  return (
+                    <tr key={l.id} onClick={() => router.push(`/leads/${l.id}`)}
+                      className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer">
+                      <td className="px-4 py-3 font-medium text-gray-800">
+                        <span>{l.ad} {l.soyad}</span>
+                        {l.kaynak === "KiraciPortal" && (
+                          <span className="ml-1.5 text-[10px] font-semibold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">Portal</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">{l.telefon}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${DURUM_RENK[durum] ?? "bg-gray-100 text-gray-600"}`}>
+                          {DURUM_LABEL[durum] ?? durum}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-500">
+                        {l.kaynak === "KiraciPortal" ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">Portal</span>
+                        ) : l.kaynak}
+                      </td>
+                      <td className="px-4 py-3 text-gray-500">{l.ilgiTip ?? "—"}</td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {l.butce ? `₺${l.butce.toLocaleString("tr-TR")}` : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-500">{l.atananAd ?? "—"}</td>
+                      <td className="px-4 py-3">
+                        {daire ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold bg-violet-50 text-violet-700 px-2 py-0.5 rounded">
+                            <Building2 size={10} />{daire}
+                          </span>
+                        ) : <span className="text-gray-400">—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                          <span className="flex items-center gap-1"><Home size={10} />{l._count.turlar}</span>
+                          <span className="flex items-center gap-1"><Phone size={10} />{l._count.gorusmeler}</span>
+                          <span className="flex items-center gap-1"><Mail size={10} />{l._count.davetler}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => router.push(`/leads/${l.id}`)}
+                            className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600">
+                            <ChevronRight size={14} />
+                          </button>
+                          <button onClick={() => setSilOnay(l.id)}
+                            className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
         </div>
       )}
 
-      {/* Modals */}
       {modal && <YeniLeadModal onClose={() => setModal(false)} onSaved={yukle} />}
 
       {silOnay && (
