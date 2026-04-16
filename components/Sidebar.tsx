@@ -51,12 +51,6 @@ const MENU = [
       { href: "/takvim",   label: "Randevu Takvimi",   icon: Calendar },
     ],
   },
-  {
-    baslik: "DİĞER PANELLER",
-    items: [
-      { href: "http://localhost:3000", label: "Kira Yönetim",  icon: LayoutDashboard, harici: true },
-    ],
-  },
 ];
 
 interface MenuItem {
