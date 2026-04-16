@@ -44,7 +44,8 @@ const MENU = [
   {
     baslik: "ONAY & YÖNETİM",
     items: [
-      { href: "/onaylar",  label: "Kiralama Onayları", icon: CheckSquare },
+      { href: "/onaylar",       label: "Kiralama Onayları",   icon: CheckSquare },
+      { href: "/sozlesme-onay", label: "Sözleşme Onayları",  icon: CheckSquare },
       { href: "/ekip",     label: "Ekip Yönetimi",     icon: UserCog },
       { href: "/hakedis",  label: "Hakediş Raporları", icon: DollarSign },
       { href: "/takvim",   label: "Randevu Takvimi",   icon: Calendar },

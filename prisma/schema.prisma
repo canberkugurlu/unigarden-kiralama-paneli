@@ -61,6 +61,7 @@ model Ogrenci {
   kimlikBelgesi  String?
   ogrenciBelgesi String?
   olusturmaTar   DateTime      @default(now())
+  rol            String        @default("Aktif") // "Potansiyel" | "Pasif" | "Aktif"
   sozlesmeler     Sozlesme[]
   bakimTalepleri  BakimTalebi[]
   teslimRaporlari TeslimRaporu[]
@@ -86,6 +87,7 @@ model Sozlesme {
   imzaTarihi      DateTime @default(now())
   olusturmaTar    DateTime @default(now())
   odemeler        Odeme[]
+  onaylar         SozlesmeOnay[]
   oda             String?
 }
 
@@ -98,6 +100,18 @@ model Odeme {
   odenmeTarihi DateTime
   aciklama     String?
   olusturmaTar DateTime @default(now())
+}
+
+model SozlesmeOnay {
+  id          String   @id @default(cuid())
+  sozlesmeId  String
+  sozlesme    Sozlesme @relation(fields: [sozlesmeId], references: [id])
+  onaylayan   String   // "KiralamaSorumlusu" | "Muhasebeci" | "Admin"
+  onaylayanId String
+  onaylayanAd String
+  tarih       DateTime @default(now())
+
+  @@unique([sozlesmeId, onaylayan])
 }
 
 model Tedarikci {
@@ -304,6 +318,7 @@ model PotansiyelMusteri {
   olusturmaTar  DateTime @default(now())
   guncellemeTar DateTime @updatedAt
 
+  ogrenciId  String?  @unique
   turlar     DaireTuru[]
   gorusmeler TelefonGorusmesi[]
   davetler   DavetLinki[]

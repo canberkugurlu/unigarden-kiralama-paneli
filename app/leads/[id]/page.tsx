@@ -4,7 +4,7 @@ import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Phone, Home, Mail, Pencil, Plus, X, Check,
-  User, Calendar, DollarSign, Tag, MessageSquare, Clock
+  User, Calendar, DollarSign, Tag, MessageSquare, Clock, FileText
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -246,6 +246,122 @@ function YeniGorusmeModal({ musteriId, onClose, onSaved }: { musteriId: string; 
   );
 }
 
+// ─── SozlesmeAtaModal ─────────────────────────────────────────────────────────
+
+interface Konut { id: string; daireNo: string; blok: string; tip: string; kiraBedeli: number; durum: string; }
+
+function SozlesmeAtaModal({ musteriId, onClose, onSaved }: { musteriId: string; onClose: () => void; onSaved: () => void }) {
+  const [konutlar, setKonutlar] = useState<Konut[]>([]);
+  const [form, setForm] = useState({
+    konutId: "", baslangicTarihi: "", bitisTarihi: "", aylikKira: "",
+    depozito: "", kiraOdemGunu: "1", ozelSartlar: "", oda: "",
+  });
+  const [yuk, setYuk] = useState(false);
+  const [hata, setHata] = useState("");
+
+  useEffect(() => {
+    fetch("/api/konutlar")
+      .then(r => r.json())
+      .then((d: Konut[]) => setKonutlar(d.filter(k => k.durum === "Bos" || k.durum === "Müsait")));
+  }, []);
+
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+    setForm(f => ({ ...f, [k]: e.target.value }));
+
+  const konutSecildi = (id: string) => {
+    const k = konutlar.find(k => k.id === id);
+    setForm(f => ({ ...f, konutId: id, aylikKira: k ? String(k.kiraBedeli) : f.aylikKira }));
+  };
+
+  const kaydet = async () => {
+    if (!form.konutId || !form.baslangicTarihi || !form.bitisTarihi || !form.aylikKira || !form.depozito) {
+      setHata("Zorunlu alanları doldurunuz."); return;
+    }
+    setYuk(true); setHata("");
+    const res = await fetch(`/api/leads/${musteriId}/sozlesme-ata`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    const j = await res.json();
+    if (!res.ok) { setHata(j.error ?? "Hata oluştu."); setYuk(false); return; }
+    setYuk(false);
+    onSaved();
+    onClose();
+  };
+
+  const inp = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500";
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 sticky top-0 bg-white">
+          <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+            <FileText size={16} className="text-violet-600" /> Sözleşme Ata
+          </h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100"><X size={16} /></button>
+        </div>
+        <div className="p-5 space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Daire *</label>
+            <select value={form.konutId} onChange={e => konutSecildi(e.target.value)} className={inp}>
+              <option value="">Daire seçin...</option>
+              {konutlar.map(k => (
+                <option key={k.id} value={k.id}>
+                  {k.daireNo} — {k.blok} Blok, {k.tip} — ₺{k.kiraBedeli.toLocaleString("tr-TR")}
+                </option>
+              ))}
+            </select>
+            {konutlar.length === 0 && <p className="text-xs text-amber-600 mt-1">Boş daire bulunamadı.</p>}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Başlangıç *</label>
+              <input type="date" value={form.baslangicTarihi} onChange={set("baslangicTarihi")} className={inp} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Bitiş *</label>
+              <input type="date" value={form.bitisTarihi} onChange={set("bitisTarihi")} className={inp} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Aylık Kira (₺) *</label>
+              <input type="number" value={form.aylikKira} onChange={set("aylikKira")} className={inp} placeholder="0" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Depozito (₺) *</label>
+              <input type="number" value={form.depozito} onChange={set("depozito")} className={inp} placeholder="0" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Ödeme Günü</label>
+              <input type="number" min="1" max="28" value={form.kiraOdemGunu} onChange={set("kiraOdemGunu")} className={inp} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Oda</label>
+              <input value={form.oda} onChange={set("oda")} className={inp} placeholder="1+1, 2+1..." />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Özel Şartlar</label>
+            <textarea value={form.ozelSartlar} onChange={set("ozelSartlar")} rows={2} className={inp + " resize-none"} />
+          </div>
+          {hata && <p className="text-xs text-red-500 bg-red-50 px-3 py-2 rounded-lg">{hata}</p>}
+        </div>
+        <div className="flex gap-2 px-5 pb-5">
+          <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-600">İptal</button>
+          <button onClick={kaydet} disabled={yuk}
+            className="flex-1 py-2 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 disabled:opacity-50">
+            {yuk ? "Kaydediliyor…" : "Sözleşme Gönder"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function LeadDetayPage({ params }: { params: Promise<{ id: string }> }) {
@@ -256,6 +372,7 @@ export default function LeadDetayPage({ params }: { params: Promise<{ id: string
   const [aktifTab, setAktifTab] = useState<"genel" | "turlar" | "gorusmeler" | "davetler">("genel");
   const [turModal, setTurModal] = useState(false);
   const [gorusmeModal, setGorusmeModal] = useState(false);
+  const [sozlesmeModal, setSozlesmeModal] = useState(false);
   const [durumDuzenle, setDurumDuzenle] = useState(false);
   const [yeniDurum, setYeniDurum] = useState("");
 
@@ -335,7 +452,11 @@ export default function LeadDetayPage({ params }: { params: Promise<{ id: string
           </div>
 
           {/* Quick Actions */}
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-2 shrink-0 flex-wrap">
+            <button onClick={() => setSozlesmeModal(true)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700">
+              <FileText size={13} /> Sözleşme Ata
+            </button>
             <button onClick={() => setTurModal(true)}
               className="flex items-center gap-1.5 px-3 py-2 bg-violet-600 text-white rounded-lg text-xs font-medium hover:bg-violet-700">
               <Home size={13} /> Tur Ekle
@@ -537,6 +658,7 @@ export default function LeadDetayPage({ params }: { params: Promise<{ id: string
 
       {turModal && <YeniTurModal musteriId={id} onClose={() => setTurModal(false)} onSaved={yukle} />}
       {gorusmeModal && <YeniGorusmeModal musteriId={id} onClose={() => setGorusmeModal(false)} onSaved={yukle} />}
+      {sozlesmeModal && <SozlesmeAtaModal musteriId={id} onClose={() => setSozlesmeModal(false)} onSaved={yukle} />}
     </div>
   );
 }
