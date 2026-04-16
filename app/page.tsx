@@ -60,6 +60,9 @@ async function getStats() {
     prisma.potansiyelMusteri.findMany({
       take: 5,
       orderBy: { olusturmaTar: "desc" },
+      include: {
+        ogrenci: { select: { rol: true, sozlesmeler: { where: { durum: { not: "Iptal" } }, select: { durum: true }, orderBy: { olusturmaTar: "desc" }, take: 1 } } },
+      },
     }),
   ]);
 
@@ -80,15 +83,16 @@ async function getStats() {
 }
 
 const DURUM_RENK: Record<string, string> = {
-  Yeni: "bg-blue-100 text-blue-700",
-  Iletisimde: "bg-yellow-100 text-yellow-700",
-  TurPlanlandı: "bg-indigo-100 text-indigo-700",
-  TurYapildi: "bg-purple-100 text-purple-700",
-  TeklifVerildi: "bg-orange-100 text-orange-700",
-  SozlesmeAsamasi: "bg-emerald-100 text-emerald-700",
+  Yeni: "bg-gray-100 text-gray-600",
+  Iletisimde: "bg-gray-100 text-gray-600",
+  TurPlanlandı: "bg-gray-100 text-gray-600",
+  TurYapildi: "bg-gray-100 text-gray-600",
+  TeklifVerildi: "bg-gray-100 text-gray-600",
+  SozlesmeAsamasi: "bg-blue-100 text-blue-700",
+  PasifKiraci: "bg-yellow-100 text-yellow-700",
   AktifKiraci: "bg-green-100 text-green-700",
   Reddedildi: "bg-red-100 text-red-700",
-  Ilgisiz: "bg-gray-100 text-gray-600",
+  Ilgisiz: "bg-gray-100 text-gray-500",
 };
 
 const DURUM_LABEL: Record<string, string> = {
@@ -98,10 +102,24 @@ const DURUM_LABEL: Record<string, string> = {
   TurYapildi: "Tur Yapıldı",
   TeklifVerildi: "Teklif Verildi",
   SozlesmeAsamasi: "Sözleşme Aşaması",
+  PasifKiraci: "Pasif Kiracı",
   AktifKiraci: "Aktif Kiracı",
   Reddedildi: "Reddedildi",
   Ilgisiz: "İlgisiz",
 };
+
+function effectiveDurum(l: { durum: string; ogrenci?: { rol: string; sozlesmeler: { durum: string }[] } | null }): string {
+  if (!l.ogrenci) return l.durum;
+  const { rol, sozlesmeler } = l.ogrenci;
+  if (rol === "Aktif") return "AktifKiraci";
+  if (sozlesmeler.length > 0) {
+    const s = sozlesmeler[0];
+    if (s.durum === "OnaylandiAktifBekliyor") return "PasifKiraci";
+    if (s.durum === "ImzalandiOnayBekliyor" || s.durum === "BekleniyorImza") return "SozlesmeAsamasi";
+  }
+  if (rol === "Pasif") return "PasifKiraci";
+  return l.durum;
+}
 
 function StatKart({
   title,
@@ -269,9 +287,11 @@ export default async function Dashboard() {
                     <td className="py-2.5 pr-4 text-gray-600">{l.telefon}</td>
                     <td className="py-2.5 pr-4 text-gray-500">{l.kaynak}</td>
                     <td className="py-2.5 pr-4">
-                      <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${DURUM_RENK[l.durum] ?? "bg-gray-100 text-gray-600"}`}>
-                        {DURUM_LABEL[l.durum] ?? l.durum}
-                      </span>
+                      {(() => { const d = effectiveDurum(l); return (
+                        <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${DURUM_RENK[d] ?? "bg-gray-100 text-gray-600"}`}>
+                          {DURUM_LABEL[d] ?? d}
+                        </span>
+                      ); })()}
                     </td>
                     <td className="py-2.5 text-gray-500 text-xs">{new Date(l.olusturmaTar).toLocaleDateString("tr-TR")}</td>
                   </tr>

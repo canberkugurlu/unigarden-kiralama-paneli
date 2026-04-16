@@ -55,16 +55,16 @@ const DURUM_LABEL: Record<string, string> = {
 };
 
 const DURUM_RENK: Record<string, string> = {
-  Yeni: "bg-blue-100 text-blue-700",
-  Iletisimde: "bg-yellow-100 text-yellow-700",
-  TurPlanlandı: "bg-indigo-100 text-indigo-700",
-  TurYapildi: "bg-purple-100 text-purple-700",
-  TeklifVerildi: "bg-orange-100 text-orange-700",
-  SozlesmeAsamasi: "bg-emerald-100 text-emerald-700",
-  PasifKiraci: "bg-amber-100 text-amber-700",
+  Yeni: "bg-gray-100 text-gray-600",
+  Iletisimde: "bg-gray-100 text-gray-600",
+  TurPlanlandı: "bg-gray-100 text-gray-600",
+  TurYapildi: "bg-gray-100 text-gray-600",
+  TeklifVerildi: "bg-gray-100 text-gray-600",
+  SozlesmeAsamasi: "bg-blue-100 text-blue-700",
+  PasifKiraci: "bg-yellow-100 text-yellow-700",
   AktifKiraci: "bg-green-100 text-green-700",
   Reddedildi: "bg-red-100 text-red-700",
-  Ilgisiz: "bg-gray-100 text-gray-600",
+  Ilgisiz: "bg-gray-100 text-gray-500",
 };
 
 const KAYNAKLAR = ["Manuel", "Website", "Referans", "Instagram", "Telefon", "Fuar", "KiraciPortal", "Diğer"];
