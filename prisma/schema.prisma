@@ -68,6 +68,7 @@ model Ogrenci {
   turnikeLoglari  TurnikeLog[]
   turnikeEngeli   TurnikeEngel?
   gunlukOdemeler  GunlukOdeme[]
+  potansiyelMusteri PotansiyelMusteri?
 }
 
 model Sozlesme {
@@ -318,7 +319,8 @@ model PotansiyelMusteri {
   olusturmaTar  DateTime @default(now())
   guncellemeTar DateTime @updatedAt
 
-  ogrenciId  String?  @unique
+  ogrenciId  String?   @unique
+  ogrenci    Ogrenci?  @relation(fields: [ogrenciId], references: [id])
   turlar     DaireTuru[]
   gorusmeler TelefonGorusmesi[]
   davetler   DavetLinki[]

@@ -23,8 +23,7 @@ export async function GET(req: Request) {
       turlar: { orderBy: { tarih: "desc" }, take: 1 },
       gorusmeler: { orderBy: { tarih: "desc" }, take: 1 },
       _count: { select: { turlar: true, gorusmeler: true, davetler: true } },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ogrenci: { select: { id: true, rol: true, sozlesmeler: { where: { durum: { not: "Iptal" } }, include: { konut: true }, orderBy: { olusturmaTar: "desc" }, take: 1 } } } as any,
+      ogrenci: { select: { id: true, rol: true, sozlesmeler: { where: { durum: { not: "Iptal" } }, include: { konut: true }, orderBy: { olusturmaTar: "desc" }, take: 1 } } },
     },
     orderBy: { guncellemeTar: "desc" },
   });
