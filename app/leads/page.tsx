@@ -38,7 +38,7 @@ interface Lead {
 
 const DURUMLAR = [
   "Yeni", "Iletisimde", "TurPlanlandı", "TurYapildi",
-  "TeklifVerildi", "SozlesmeAsamasi", "AktifKiraci", "Reddedildi", "Ilgisiz",
+  "TeklifVerildi", "SozlesmeAsamasi", "PasifKiraci", "AktifKiraci", "Reddedildi", "Ilgisiz",
 ];
 
 const DURUM_LABEL: Record<string, string> = {
@@ -48,6 +48,7 @@ const DURUM_LABEL: Record<string, string> = {
   TurYapildi: "Tur Yapıldı",
   TeklifVerildi: "Teklif Verildi",
   SozlesmeAsamasi: "Sözleşme Aşaması",
+  PasifKiraci: "Pasif Kiracı",
   AktifKiraci: "Aktif Kiracı",
   Reddedildi: "Reddedildi",
   Ilgisiz: "İlgisiz",
@@ -60,6 +61,7 @@ const DURUM_RENK: Record<string, string> = {
   TurYapildi: "bg-purple-100 text-purple-700",
   TeklifVerildi: "bg-orange-100 text-orange-700",
   SozlesmeAsamasi: "bg-emerald-100 text-emerald-700",
+  PasifKiraci: "bg-amber-100 text-amber-700",
   AktifKiraci: "bg-green-100 text-green-700",
   Reddedildi: "bg-red-100 text-red-700",
   Ilgisiz: "bg-gray-100 text-gray-600",
@@ -73,7 +75,12 @@ function effectiveDurum(lead: Lead): string {
   if (!lead.ogrenci) return lead.durum;
   const { rol, sozlesmeler } = lead.ogrenci;
   if (rol === "Aktif") return "AktifKiraci";
-  if (sozlesmeler.length > 0) return "SozlesmeAsamasi";
+  if (sozlesmeler.length > 0) {
+    const s = sozlesmeler[0];
+    if (s.durum === "OnaylandiAktifBekliyor") return "PasifKiraci";
+    if (s.durum === "ImzalandiOnayBekliyor" || s.durum === "BekleniyorImza") return "SozlesmeAsamasi";
+  }
+  if (rol === "Pasif") return "PasifKiraci";
   return lead.durum;
 }
 
