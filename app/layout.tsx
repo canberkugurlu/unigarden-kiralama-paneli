@@ -4,6 +4,7 @@ import "./globals.css";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import LayoutShell from "@/components/LayoutShell";
 import { headers } from "next/headers";
+import NextTopLoader from "nextjs-toploader";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 
@@ -40,6 +41,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="tr" className={geist.variable} suppressHydrationWarning>
       <head><script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} /></head>
       <body className="antialiased">
+        <NextTopLoader color="#7c3aed" height={3} showSpinner={false} />
         <LayoutShell>{children}</LayoutShell>
       </body>
     </html>
